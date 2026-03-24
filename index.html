@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SavingsMap — Visualize Your Savings Journey</title>
+<meta name="description" content="Free savings goal calculator with a visual roadmap. See exactly when you'll reach your goal, celebrate milestones, and explore boost scenarios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f4ef;
+    --white: #ffffff;
+    --forest: #1a3a2a;
+    --forest-mid: #2d5a3d;
+    --forest-light: #4a8c5c;
+    --gold: #c9933a;
+    --gold-light: #f0c97a;
+    --cream: #fdf8f0;
+    --border: #e5ddd0;
+    --text: #1a1a18;
+    --muted: #7a7268;
+    --milestone25: #4a8c5c;
+    --milestone50: #c9933a;
+    --milestone75: #3a6b8c;
+    --milestone100: #8b4a9c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--forest);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  .logo span { color: var(--gold-light); }
+
+  .nav-tagline {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 300;
+  }
+
+  /* HERO */
+  .hero {
+    background: var(--forest);
+    padding: 60px 40px 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,147,58,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 58px);
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--gold-light);
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: rgba(255,255,255,0.6);
+    max-width: 500px;
+    margin: 0 auto;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 900px;
+    margin: -40px auto 60px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 4px 40px rgba(26,58,42,0.10);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .card-header {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-icon {
+    width: 32px; height: 32px;
+    background: var(--forest);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--forest);
+  }
+
+  .card-body { padding: 28px; }
+
+  /* FORM */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-prefix {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 12px 14px 12px 32px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+  }
+
+  input.no-prefix { padding-left: 14px; }
+  select { padding-left: 14px; cursor: pointer; }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--forest);
+    box-shadow: 0 0 0 3px rgba(26,58,42,0.08);
+  }
+
+  .range-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .range-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 10px;
+    appearance: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px; height: 20px;
+    background: var(--forest);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  .range-val {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--forest);
+  }
+
+  /* BUTTON */
+  .btn-calculate {
+    width: 100%;
+    padding: 16px;
+    background: var(--forest);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-calculate:hover { background: var(--forest-mid); transform: translateY(-1px); }
+  .btn-calculate:active { transform: translateY(0); }
+
+  /* RESULTS */
+  #results { display: none; animation: fadeUp 0.5s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SUMMARY STATS */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 0;
+  }
+
+  .summary-stat {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .summary-stat .s-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .summary-stat .s-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--forest);
+    line-height: 1;
+  }
+
+  .summary-stat .s-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .summary-stat.highlight {
+    background: var(--forest);
+    border-color: var(--forest);
+  }
+
+  .summary-stat.highlight .s-label { color: rgba(255,255,255,0.6); }
+  .summary-stat.highlight .s-value { color: var(--gold-light); }
+  .summary-stat.highlight .s-sub { color: rgba(255,255,255,0.5); }
+
+  /* VISUAL ROADMAP */
+  .roadmap-wrap {
+    position: relative;
+    padding: 10px 0 30px;
+  }
+
+  .roadmap-track {
+    height: 12px;
+    background: var(--border);
+    border-radius: 99px;
+    position: relative;
+    overflow: visible;
+    margin: 40px 0 50px;
+  }
+
+  .roadmap-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--forest) 0%, var(--forest-light) 100%);
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+  }
+
+  .roadmap-fill::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: 50%;
+    transform: translateY(-50%);
+    width: 20px; height: 20px;
+    background: var(--forest);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .milestone-marker {
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .milestone-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.3s;
+  }
+
+  .milestone-marker.reached .milestone-dot { transform: scale(1.3); }
+
+  .milestone-label-above {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .milestone-label-below {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .m-pct {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .m-date {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .m-amount {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* BOOST SECTION */
+  .boost-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .boost-card {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .boost-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+  }
+
+  .boost-amount {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .boost-time {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--forest);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .boost-save {
+    font-size: 12px;
+    color: var(--forest-light);
+    font-weight: 500;
+  }
+
+  /* TIMELINE TABLE */
+  .timeline-scroll {
+    max-height: 320px;
+    overflow-y: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .timeline-scroll::-webkit-scrollbar { width: 6px; }
+  .timeline-scroll::-webkit-scrollbar-track { background: var(--bg); }
+  .timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead th {
+    background: var(--cream);
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr { border-bottom: 1px solid rgba(229,221,208,0.5); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--cream); }
+
+  tbody td {
+    padding: 11px 16px;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  tbody td:nth-child(3) { font-weight: 600; color: var(--forest); }
+
+  .milestone-row td { background: rgba(201,147,58,0.06); font-weight: 600; }
+
+  .ms-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+
+  .ms-25 { background: rgba(74,140,92,0.15); color: var(--milestone25); }
+  .ms-50 { background: rgba(201,147,58,0.15); color: var(--milestone50); }
+  .ms-75 { background: rgba(58,107,140,0.15); color: var(--milestone75); }
+  .ms-100 { background: rgba(139,74,156,0.15); color: var(--milestone100); }
+
+  /* PROGRESS BAR IN TABLE */
+  .bar-cell { min-width: 100px; }
+  .mini-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .mini-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--forest), var(--forest-light));
+    border-radius: 99px;
+  }
+
+  /* AFFILIATE SECTION */
+  .affiliate-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .aff-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    text-decoration: none;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+
+  .aff-card:hover {
+    border-color: var(--forest);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(26,58,42,0.08);
+  }
+
+  .aff-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .aff-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .aff-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* CONFETTI CANVAS */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--forest);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 24px;
+    font-size: 13px;
+  }
+
+  footer a { color: var(--gold-light); text-decoration: none; }
+
+  /* AD PLACEHOLDER */
+  .ad-placeholder {
+    background: var(--cream);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    nav { padding: 14px 20px; }
+    .hero { padding: 40px 20px 60px; }
+    .main { padding: 0 12px; margin-top: -30px; }
+    .card-body { padding: 18px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .boost-grid { grid-template-columns: 1fr; }
+    .affiliate-grid { grid-template-columns: 1fr; }
+    .nav-tagline { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<nav>
+  <div class="logo">Savings<span>Map</span></div>
+  <div class="nav-tagline">Free Savings Goal Calculator</div>
+</nav>
+
+<div class="hero">
+  <h1>See Your Path to<br><em>Financial Freedom</em></h1>
+  <p>Enter your goal, watch your roadmap appear — with milestones, boost scenarios, and a month-by-month breakdown.</p>
+</div>
+
+<div class="main">
+
+  <!-- AD SLOT TOP -->
+  <div class="ad-placeholder" style="margin-bottom:20px;">
+    <!-- Google AdSense — place your ad code here -->
+    Advertisement
+  </div>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">🎯</div>
+      <div class="card-title">Your Savings Goal</div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+
+        <div class="form-group full">
+          <label>Goal Name</label>
+          <input type="text" id="goalName" class="no-prefix" placeholder="e.g. Dream Vacation, Emergency Fund, New Car…" value="Dream Vacation">
+        </div>
+
+        <div class="form-group">
+          <label>Currency</label>
+          <select id="currency">
+            <option value="$">$ USD — Dollar</option>
+            <option value="€">€ EUR — Euro</option>
+            <option value="£">£ GBP — Pound</option>
+            <option value="₦">₦ NGN — Naira</option>
+            <option value="₹">₹ INR — Rupee</option>
+            <option value="¥">¥ JPY — Yen</option>
+            <option value="C$">C$ CAD — Canadian Dollar</option>
+            <option value="A$">A$ AUD — Australian Dollar</option>
+            <option value="R">R ZAR — Rand</option>
+            <option value="Ksh">Ksh KES — Kenyan Shilling</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Goal Amount</label>
+          <div class="input-wrap">
+            <span class="input-prefix" id="prefix1">$</span>
+            <input type="number" id="goalAmount" placeholder="5,000" value="5000" min="1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Current Savings</label>
+          <div class="input-wrap">
+            <span class="input-prefix" id="prefix2">$</span>
+            <input type="number" id="currentSavings" placeholder="0" value="500" min="0">
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <div class="range-group">
+            <div class="range-label-row">
+              <label>Monthly Contribution</label>
+              <span class="range-val"><span id="prefix3">$</span><span id="rangeDisplay">200</span></span>
+            </div>
+            <input type="range" id="monthlyRange" min="10" max="5000" step="10" value="200"
+              oninput="document.getElementById('monthlyContrib').value=this.value; document.getElementById('rangeDisplay').textContent=Number(this.value).toLocaleString()">
+            <input type="number" id="monthlyContrib" placeholder="200" value="200" min="1"
+              style="display:none">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Annual Interest Rate (%)</label>
+          <div class="input-wrap">
+            <span class="input-prefix">%</span>
+            <input type="number" id="interestRate" placeholder="4.5" value="4.5" min="0" max="30" step="0.1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Boost Amount (per month)</label>
+          <div class="input-wrap">
+            <span class="input-prefix" id="prefix4">$</span>
+            <input type="number" id="boostAmount" placeholder="50" value="50" min="0">
+          </div>
+        </div>
+
+      </div>
+
+      <button class="btn-calculate" onclick="calculate()">
+        <span>✦</span> Calculate My Savings Roadmap
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <!-- SUMMARY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div class="card-title" id="resultTitle">Your Roadmap</div>
+      </div>
+      <div class="card-body">
+        <div class="summary-grid">
+          <div class="summary-stat highlight">
+            <div class="s-label">Time to Goal</div>
+            <div class="s-value" id="stat-time">—</div>
+            <div class="s-sub" id="stat-date">—</div>
+          </div>
+          <div class="summary-stat">
+            <div class="s-label">Total Saved</div>
+            <div class="s-value" id="stat-total">—</div>
+            <div class="s-sub">incl. interest</div>
+          </div>
+          <div class="summary-stat">
+            <div class="s-label">Interest Earned</div>
+            <div class="s-value" id="stat-interest">—</div>
+            <div class="s-sub">free money 🎉</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISUAL ROADMAP -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🗺️</div>
+        <div class="card-title">Visual Roadmap</div>
+      </div>
+      <div class="card-body">
+        <div class="roadmap-wrap">
+          <div class="roadmap-track" id="roadmapTrack">
+            <div class="roadmap-fill" id="roadmapFill" style="width:0%"></div>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top: -10px;">
+          <span>Start</span>
+          <span>25%</span>
+          <span>50%</span>
+          <span>75%</span>
+          <span>🏁 Goal!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOST SCENARIOS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Boost Scenarios — What If You Saved More?</div>
+      </div>
+      <div class="card-body">
+        <div class="boost-grid" id="boostGrid"></div>
+      </div>
+    </div>
+
+    <!-- TIMELINE TABLE -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📅</div>
+        <div class="card-title">Month-by-Month Breakdown</div>
+      </div>
+      <div class="card-body" style="padding-bottom:0">
+        <div class="timeline-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Date</th>
+                <th>Balance</th>
+                <th>Progress</th>
+                <th>Interest</th>
+              </tr>
+            </thead>
+            <tbody id="timelineBody"></tbody>
+          </table>
+        </div>
+        <p style="font-size:12px; color:var(--muted); padding:12px 0; text-align:center;">
+          Showing up to 120 months (10 years). Interest compounded monthly.
+        </p>
+      </div>
+    </div>
+
+    <!-- AD SLOT MID -->
+    <div class="ad-placeholder" style="margin-bottom:24px;">
+      <!-- Google AdSense — place your ad code here -->
+      Advertisement
+    </div>
+
+    <!-- AFFILIATE SECTION -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">💡</div>
+        <div class="card-title">Grow Your Savings Faster — Recommended Tools</div>
+      </div>
+      <div class="card-body">
+        <div class="affiliate-grid">
+          <a href="https://www.acorns.com" target="_blank" rel="noopener" class="aff-card">
+            <div class="aff-icon" style="background:#1a3a2a;">🌱</div>
+            <div>
+              <div class="aff-name">Acorns</div>
+              <div class="aff-desc">Automatically invest spare change. Start saving with as little as $5.</div>
+            </div>
+          </a>
+          <a href="https://www.ynab.com" target="_blank" rel="noopener" class="aff-card">
+            <div class="aff-icon" style="background:#3d6b99;">📋</div>
+            <div>
+              <div class="aff-name">YNAB</div>
+              <div class="aff-desc">The #1 budgeting app. Give every dollar a job and save more every month.</div>
+            </div>
+          </a>
+          <a href="https://qapital.com" target="_blank" rel="noopener" class="aff-card">
+            <div class="aff-icon" style="background:#8b4a9c;">🎯</div>
+            <div>
+              <div class="aff-name">Qapital</div>
+              <div class="aff-desc">Save towards specific goals automatically with smart saving rules.</div>
+            </div>
+          </a>
+          <a href="https://www.marcus.com" target="_blank" rel="noopener" class="aff-card">
+            <div class="aff-icon" style="background:#c9933a;">🏦</div>
+            <div>
+              <div class="aff-name">High-Yield Savings</div>
+              <div class="aff-desc">Earn 4–5% APY on your savings. Marcus by Goldman Sachs — no fees.</div>
+            </div>
+          </a>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:14px;text-align:center;">
+          * Some links may be affiliate links. We only recommend tools we believe in. Using them supports this free calculator.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- end #results -->
+
+  <!-- SEO TEXT BLOCK -->
+  <div class="card" style="margin-top:24px;">
+    <div class="card-body">
+      <h2 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--forest);margin-bottom:12px;">How to Use the SavingsMap Calculator</h2>
+      <p style="font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:10px;">
+        SavingsMap is a free savings goal calculator that shows you <strong>exactly how long it will take</strong> to reach your financial goal — whether it's an emergency fund, vacation, car, house deposit, or anything else.
+      </p>
+      <p style="font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:10px;">
+        Simply enter your <strong>goal amount</strong>, your <strong>current savings</strong>, and how much you can <strong>save each month</strong>. Our calculator factors in compound interest and shows you a visual roadmap with milestones at 25%, 50%, and 75% of your journey.
+      </p>
+      <p style="font-size:14px;color:var(--muted);line-height:1.8;">
+        Use the <strong>Boost Scenarios</strong> feature to see how saving a little extra each month can dramatically cut down your timeline. Even an extra $50/month can shave months off your savings journey.
+      </p>
+    </div>
+  </div>
+
+</div><!-- end .main -->
+
+<footer>
+  <p>© 2025 SavingsMap · Free Savings Goal Calculator · <a href="#">Privacy Policy</a> · <a href="#">Terms</a></p>
+  <p style="margin-top:6px; font-size:11px;">For informational purposes only. Not financial advice.</p>
+</footer>
+
+<script>
+// Sync currency prefix
+document.getElementById('currency').addEventListener('change', function() {
+  const sym = this.value;
+  ['prefix1','prefix2','prefix3','prefix4'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = sym;
+  });
+});
+
+// Sync range slider
+document.getElementById('monthlyRange').addEventListener('input', function() {
+  document.getElementById('monthlyContrib').value = this.value;
+  document.getElementById('rangeDisplay').textContent = Number(this.value).toLocaleString();
+});
+
+document.getElementById('monthlyContrib').addEventListener('input', function() {
+  document.getElementById('monthlyRange').value = this.value;
+  document.getElementById('rangeDisplay').textContent = Number(this.value).toLocaleString();
+});
+
+function fmt(num, sym) {
+  if(Math.abs(num) >= 1000000) return sym + (num/1000000).toFixed(2) + 'M';
+  if(Math.abs(num) >= 1000) return sym + (num/1000).toFixed(1) + 'k';
+  return sym + Math.round(num).toLocaleString();
+}
+
+function fmtFull(num, sym) {
+  return sym + num.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+}
+
+function monthsToHuman(months) {
+  if(months <= 0) return 'Already there! 🎉';
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  let s = '';
+  if(y > 0) s += y + (y===1?' year':' years');
+  if(y > 0 && m > 0) s += ' & ';
+  if(m > 0) s += m + (m===1?' month':' months');
+  return s;
+}
+
+function addMonths(date, months) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+function calcMonths(goal, current, monthly, annualRate) {
+  const r = annualRate / 100 / 12;
+  let balance = current;
+  if(r === 0) {
+    const remaining = goal - current;
+    if(remaining <= 0) return { months: 0, schedule: [] };
+    return { months: Math.ceil(remaining / monthly), schedule: null };
+  }
+  let months = 0;
+  const schedule = [];
+  const today = new Date();
+  while(balance < goal && months < 1200) {
+    const interest = balance * r;
+    balance += monthly + interest;
+    months++;
+    if(months <= 120) {
+      schedule.push({
+        month: months,
+        date: addMonths(today, months),
+        balance: Math.min(balance, goal * 1.5),
+        interest: interest
+      });
+    }
+    if(balance >= goal) break;
+  }
+  return { months, schedule };
+}
+
+function calculate() {
+  const sym = document.getElementById('currency').value;
+  const goalName = document.getElementById('goalName').value || 'Your Goal';
+  const goal = parseFloat(document.getElementById('goalAmount').value) || 5000;
+  const current = parseFloat(document.getElementById('currentSavings').value) || 0;
+  const monthly = parseFloat(document.getElementById('monthlyContrib').value) || 200;
+  const rate = parseFloat(document.getElementById('interestRate').value) || 0;
+  const boostBase = parseFloat(document.getElementById('boostAmount').value) || 50;
+
+  if(current >= goal) {
+    document.getElementById('stat-time').textContent = "Done! 🎉";
+    document.getElementById('stat-date').textContent = "You've already reached your goal!";
+    document.getElementById('results').style.display = 'block';
+    launchConfetti();
+    return;
+  }
+
+  const { months, schedule } = calcMonths(goal, current, monthly, rate);
+  const totalContrib = current + (monthly * months);
+  const totalWithInterest = goal;
+  const interestEarned = Math.max(0, goal - totalContrib);
+
+  document.getElementById('resultTitle').textContent = `Roadmap to: ${goalName}`;
+  document.getElementById('stat-time').textContent = monthsToHuman(months);
+  const endDate = addMonths(new Date(), months);
+  document.getElementById('stat-date').textContent = formatDate(endDate);
+  document.getElementById('stat-total').textContent = fmtFull(goal, sym);
+  document.getElementById('stat-interest').textContent = fmtFull(Math.round(interestEarned), sym);
+
+  // ROADMAP
+  const startPct = Math.min((current / goal) * 100, 100);
+  setTimeout(() => {
+    document.getElementById('roadmapFill').style.width = startPct + '%';
+  }, 300);
+
+  // Build milestones
+  const track = document.getElementById('roadmapTrack');
+  // Remove old milestones
+  track.querySelectorAll('.milestone-marker').forEach(e => e.remove());
+
+  const milestones = [
+    { pct: 25, color: '#4a8c5c', label: '25%' },
+    { pct: 50, color: '#c9933a', label: '50%' },
+    { pct: 75, color: '#3a6b8c', label: '75%' },
+  ];
+
+  milestones.forEach(ms => {
+    const targetAmt = goal * (ms.pct / 100);
+    let msMonths = 0;
+    if(current >= targetAmt) {
+      msMonths = 0;
+    } else {
+      const { months: m } = calcMonths(targetAmt, current, monthly, rate);
+      msMonths = m;
+    }
+    const msDate = msMonths === 0 ? 'Now' : formatDate(addMonths(new Date(), msMonths));
+    const reached = current >= targetAmt;
+
+    const marker = document.createElement('div');
+    marker.className = 'milestone-marker' + (reached ? ' reached' : '');
+    marker.style.left = ms.pct + '%';
+
+    marker.innerHTML = `
+      <div class="milestone-label-above">
+        <div class="m-pct" style="color:${ms.color}">${ms.label}</div>
+        <div class="m-amount">${fmt(targetAmt, sym)}</div>
+      </div>
+      <div class="milestone-dot" style="background:${ms.color}"></div>
+      <div class="milestone-label-below">
+        <div class="m-date">${msDate}</div>
+      </div>
+    `;
+    track.appendChild(marker);
+  });
+
+  // BOOST SCENARIOS
+  const boostAmounts = [boostBase, boostBase * 2, boostBase * 4];
+  const boostGrid = document.getElementById('boostGrid');
+  boostGrid.innerHTML = '';
+  boostAmounts.forEach(boost => {
+    const { months: bm } = calcMonths(goal, current, monthly + boost, rate);
+    const saved = months - bm;
+    const card = document.createElement('div');
+    card.className = 'boost-card';
+    card.innerHTML = `
+      <div class="boost-amount">+${sym}${boost}/month</div>
+      <div class="boost-time">${monthsToHuman(bm)}</div>
+      <div class="boost-save">${saved > 0 ? '⚡ ' + saved + ' months faster!' : 'Same pace'}</div>
+    `;
+    boostGrid.appendChild(card);
+  });
+
+  // TIMELINE TABLE
+  const tbody = document.getElementById('timelineBody');
+  tbody.innerHTML = '';
+  if(schedule && schedule.length > 0) {
+    schedule.forEach(row => {
+      const pct = Math.min((row.balance / goal) * 100, 100);
+      let msBadge = '';
+      if(Math.abs(pct - 25) < 3) msBadge = '<span class="ms-badge ms-25">25%</span>';
+      else if(Math.abs(pct - 50) < 3) msBadge = '<span class="ms-badge ms-50">50%</span>';
+      else if(Math.abs(pct - 75) < 3) msBadge = '<span class="ms-badge ms-75">75%</span>';
+      else if(pct >= 99.5) msBadge = '<span class="ms-badge ms-100">🏁 Goal!</span>';
+
+      const isMilestone = msBadge !== '';
+      const tr = document.createElement('tr');
+      if(isMilestone) tr.className = 'milestone-row';
+      tr.innerHTML = `
+        <td>Month ${row.month}${msBadge}</td>
+        <td>${formatDate(row.date)}</td>
+        <td>${fmtFull(Math.round(row.balance), sym)}</td>
+        <td class="bar-cell">
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+        </td>
+        <td style="color:var(--forest-light)">${sym}${row.interest.toFixed(2)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } else {
+    // Simple schedule without interest
+    const today = new Date();
+    let bal = current;
+    for(let m = 1; m <= Math.min(months, 120); m++) {
+      bal += monthly;
+      const pct = Math.min((bal / goal) * 100, 100);
+      let msBadge = '';
+      if(pct >= 24 && pct <= 27) msBadge = '<span class="ms-badge ms-25">25%</span>';
+      else if(pct >= 49 && pct <= 52) msBadge = '<span class="ms-badge ms-50">50%</span>';
+      else if(pct >= 74 && pct <= 77) msBadge = '<span class="ms-badge ms-75">75%</span>';
+      else if(pct >= 99.5) msBadge = '<span class="ms-badge ms-100">🏁 Goal!</span>';
+      const tr = document.createElement('tr');
+      if(msBadge) tr.className = 'milestone-row';
+      tr.innerHTML = `
+        <td>Month ${m}${msBadge}</td>
+        <td>${formatDate(addMonths(today, m))}</td>
+        <td>${fmtFull(Math.round(Math.min(bal, goal)), sym)}</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div></td>
+        <td style="color:var(--muted)">—</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Confetti if already close to goal
+  if(startPct >= 75) launchConfetti();
+}
+
+// CONFETTI ENGINE
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const colors = ['#1a3a2a','#c9933a','#f0c97a','#4a8c5c','#3a6b8c','#8b4a9c','#fff'];
+
+  for(let i = 0; i < 120; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 12 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 8,
+      speed: Math.random() * 3 + 1.5,
+      drift: (Math.random() - 0.5) * 2
+    });
+  }
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      ctx.save();
+      ctx.translate(p.x + p.w/2, p.y + p.h/2);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+      p.y += p.speed;
+      p.x += p.drift;
+      p.rot += p.rotSpeed;
+    });
+    frame++;
+    if(frame < 180) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// Auto calculate on load
+window.addEventListener('load', () => setTimeout(calculate, 600));
+</script>
+</body>
+</html>
